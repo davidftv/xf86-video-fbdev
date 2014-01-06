@@ -128,10 +128,10 @@ XVCopyPackedToFb(const void *src, void *dst_Y, void *dst_UV,/* CARD32 dst_offset
     Fvars[3]= dstPitch/*px*/;
 
         asm volatile (
-        "up0: \n\t"
+        "up0%0: \n\t"
         "mov	v5,#0 \n\t"//counter
         "push {%[Yvar],%[Src],%[UVvar]}\n\t"
-        "up1: \n\t"
+        "up1%0: \n\t"
         "ldr	v1,[%[Src]]\n\t"
         "bic	v2,v1,#0xFFFFFF00\n\t"
         "bic	v3,v1,#0xFF00FFFF\n\t"
@@ -157,7 +157,7 @@ XVCopyPackedToFb(const void *src, void *dst_Y, void *dst_UV,/* CARD32 dst_offset
         "add	v5,v5,#1 \n\t"//+1
         "ldr	v1,[%[Fvars],%[Stride]]\n\t"
         "cmp	v5,v1 \n\t"// = stride?
-        "bne	up1 \n\t"//if no - jmp up
+        "bne	up1%0 \n\t"//if no - jmp up
 
 	"pop {%[Yvar],%[Src],%[UVvar]}\n\t"
         "ldr	v1,[%[Fvars],%[SrcPitch]]\n\t"
@@ -169,7 +169,7 @@ XVCopyPackedToFb(const void *src, void *dst_Y, void *dst_UV,/* CARD32 dst_offset
         "ldr	v2,[%[Fvars],%[Lines]]\n\t"
         "subs	v2,v2,#1 \n\t"//-1 and set zero flag if 0
         "str	v2,[%[Fvars],%[Lines]]\n\t"
-        "bne	up0 \n\t"//if no - jmp up0
+        "bne	up0%0 \n\t"//if no - jmp up0
 	: : [Src] "r"(src), [Yvar] "r"(dst_Y), [UVvar] "r"(dst_UV), [Fvars] "r"(&Fvars), [Stride] "J"(0),
 	 [Lines] "J"(4*1), [SrcPitch] "J"(4*2), [DstPitch] "J"(4*3)
         : "v1","v2","v3","v6","v5","memory"
